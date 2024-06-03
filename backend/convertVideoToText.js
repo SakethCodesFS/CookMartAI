@@ -1,4 +1,4 @@
-const youtubedl = require('youtube-dl-exec');
+const ytdl = require('ytdl-core');
 const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
 const FormData = require('form-data');
@@ -14,15 +14,11 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 async function downloadAudio(url) {
   console.log('Starting downloadAudio');
   console.time('Download Audio');
-
   try {
-    const info = await youtubedl(url, {
-      dumpSingleJson: true,
-    });
-
-    const videoTitle = info.title;
-    const channelName = info.uploader;
-    const videoViews = info.view_count;
+    const info = await ytdl.getInfo(url);
+    const videoTitle = info.videoDetails.title;
+    const channelName = info.videoDetails.author.name;
+    const videoViews = info.videoDetails.viewCount;
     const uniqueNumber = Date.now();
     const folderName = `${channelName}_${videoTitle}_${uniqueNumber}`.replace(
       /[^a-zA-Z0-9-_]/g,
@@ -32,19 +28,25 @@ async function downloadAudio(url) {
     fs.mkdirSync(outputPath, { recursive: true });
 
     const audioPath = path.join(outputPath, 'audio.mp3');
-    const audioStream = youtubedl.exec(
-      url,
-      {
-        output: '-',
-        format: 'bestaudio',
-      },
-      { stdio: ['ignore', 'pipe', 'ignore'] },
-    );
+    const audioStream = ytdl(url, { filter: 'audioonly' });
+
+    console.log('Audio stream created:', audioStream);
+
+    audioStream.on('error', (err) => {
+      console.error('Error with ytdl-core stream:', err.message);
+      throw err;
+    });
 
     return new Promise((resolve, reject) => {
       ffmpeg(audioStream)
         .audioCodec('libmp3lame')
         .save(audioPath)
+        .on('start', (commandLine) => {
+          console.log('Spawned ffmpeg with command:', commandLine);
+        })
+        .on('progress', (progress) => {
+          console.log(`Processing: ${progress.percent}% done`);
+        })
         .on('end', async () => {
           console.timeEnd('Download Audio');
           console.log('Audio downloaded and converted to MP3');
@@ -61,9 +63,9 @@ async function downloadAudio(url) {
           reject(err);
         });
     });
-  } catch (err) {
-    console.error('Error fetching video info:', err.message);
-    throw err;
+  } catch (error) {
+    console.error('Error in downloadAudio:', error.message);
+    throw error;
   }
 }
 
@@ -87,8 +89,9 @@ async function transcribeAudio(gcsUri) {
     });
     const data = await response.json();
     console.timeEnd('Transcribe Audio');
-    console.log('Transcript:', data);
-    return data.text;
+    const transcript = data.text;
+    console.log('Transcript:', transcript);
+    return transcript;
   } catch (error) {
     console.timeEnd('Transcribe Audio');
     console.error('Error during transcription:', error.message);
@@ -174,21 +177,4 @@ async function summarizeRecipe(transcript) {
   }
 }
 
-async function processVideo(url) {
-  console.log('Starting processVideo');
-  console.time('Total Process');
-  try {
-    const { audioPath, videoTitle, channelName, videoViews } = await downloadAudio(url);
-    const transcript = await transcribeAudio(audioPath);
-    const ingredients = await generateIngredientList(transcript);
-    const summary = await summarizeRecipe(transcript);
-    return { ingredients, summary, videoTitle, channelName, videoViews };
-  } catch (err) {
-    console.error('Error in the process:', err.message);
-    throw err;
-  } finally {
-    console.timeEnd('Total Process');
-  }
-}
-
-module.exports = { processVideo };
+module.exports = { downloadAudio, transcribeAudio, generateIngredientList, summarizeRecipe };
