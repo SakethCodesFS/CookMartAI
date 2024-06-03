@@ -1,4 +1,4 @@
-const ytdl = require('ytdl-core');
+const { exec } = require('child_process');
 const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
 const FormData = require('form-data');
@@ -21,7 +21,6 @@ async function downloadAudio(url) {
     const outputPath = path.join(__dirname, 'downloads', folderName);
     fs.mkdirSync(outputPath, { recursive: true });
 
-    const audioPath = path.join(outputPath, 'audio.mp3');
     const ytdlOutputTemplate = path.join(outputPath, '%(title)s.%(ext)s');
 
     console.log('Downloading audio...');
@@ -41,12 +40,14 @@ async function downloadAudio(url) {
 
     // Find the downloaded file
     const files = fs.readdirSync(outputPath);
+    console.log('Downloaded files:', files); // Log the files found in the output directory
     const downloadedFile = files.find((file) => file.endsWith('.mp3'));
     if (!downloadedFile) {
       throw new Error('Audio file not found');
     }
 
     const downloadedFilePath = path.join(outputPath, downloadedFile);
+    const audioPath = path.join(outputPath, 'audio.mp3');
     fs.renameSync(downloadedFilePath, audioPath); // Rename to the expected path
 
     await uploadToGCS(audioPath, `audio/${folderName}/audio.mp3`);
