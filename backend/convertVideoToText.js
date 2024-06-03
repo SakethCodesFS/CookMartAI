@@ -13,7 +13,7 @@ ffmpeg.setFfmpegPath(require('ffmpeg-static'));
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 async function downloadAudio(url) {
-  const timerLabel = `Download Audio ${Date.now()}`; // Unique timer label
+  const timerLabel = `Download Audio ${Date.now()}`;
   console.time(timerLabel);
   try {
     const uniqueNumber = Date.now();
@@ -22,25 +22,39 @@ async function downloadAudio(url) {
     fs.mkdirSync(outputPath, { recursive: true });
 
     const audioPath = path.join(outputPath, 'audio.mp3');
+    const ytdlOutputTemplate = path.join(outputPath, '%(title)s.%(ext)s');
 
     console.log('Downloading audio...');
-    return new Promise((resolve, reject) => {
-      exec(`youtube-dl -x --audio-format mp3 -o "${audioPath}" ${url}`, (error, stdout, stderr) => {
-        if (error) {
-          console.error('Error downloading audio:', stderr);
-          reject(error);
-        } else {
+    await new Promise((resolve, reject) => {
+      exec(
+        `youtube-dl -x --audio-format mp3 -o "${ytdlOutputTemplate}" ${url}`,
+        (error, stdout, stderr) => {
+          if (error) {
+            console.error('Error downloading audio:', stderr);
+            return reject(error);
+          }
           console.log('Audio downloaded:', stdout);
           resolve();
-        }
-      });
-    }).then(async () => {
-      await uploadToGCS(audioPath, `audio/${folderName}/audio.mp3`);
-      console.timeEnd(timerLabel);
-      return {
-        audioPath: `gs://${process.env.BUCKET_NAME}/audio/${folderName}/audio.mp3`,
-      };
+        },
+      );
     });
+
+    // Find the downloaded file
+    const files = fs.readdirSync(outputPath);
+    const downloadedFile = files.find((file) => file.endsWith('.mp3'));
+    if (!downloadedFile) {
+      throw new Error('Audio file not found');
+    }
+
+    const downloadedFilePath = path.join(outputPath, downloadedFile);
+    fs.renameSync(downloadedFilePath, audioPath); // Rename to the expected path
+
+    await uploadToGCS(audioPath, `audio/${folderName}/audio.mp3`);
+
+    console.timeEnd(timerLabel);
+    return {
+      audioPath: `gs://${process.env.BUCKET_NAME}/audio/${folderName}/audio.mp3`,
+    };
   } catch (error) {
     console.timeEnd(timerLabel);
     console.error('Error in downloadAudio:', error.message);
