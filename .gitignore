@@ -1,5 +1,4 @@
 # Ignore node_modules directories
-
 backend/node_modules/
 frontend/node_modules/
 
@@ -13,9 +12,6 @@ backend/.env
 
 # Ignore any other unwanted files specific to the frontend project
 frontend/.DS_Store
-
-# Ignore downloads in backend folder
-backend/downloads/
 
 # Ignore service principle account in backend folder
 backend/cookcartaikey.json
