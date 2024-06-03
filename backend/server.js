@@ -1,9 +1,9 @@
-require('dotenv').config({ path: path.resolve(__dirname, '.env') });
-console.log('Environment Variables:', process.env);
 const express = require('express');
+const path = require('path');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const { processVideo } = require('./convertVideoToText');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 const app = express();
 const port = process.env.PORT || 5001;
