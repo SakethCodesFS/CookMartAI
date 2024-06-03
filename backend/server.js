@@ -9,7 +9,7 @@ const app = express();
 const port = process.env.PORT || 5001;
 
 const corsOptions = {
-  origin: 'https://cookmartaifrontend.onrender.com',
+  origin: '*',
   methods: 'GET,POST,PUT,DELETE',
   allowedHeaders: 'Content-Type,Authorization',
 };

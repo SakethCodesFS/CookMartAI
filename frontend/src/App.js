@@ -12,11 +12,6 @@ function App() {
   const [thumbnail, setThumbnail] = useState('');
   const [showAlert, setShowAlert] = useState(false);
 
-  const backendUrl = 'https://cookmartaibackend.onrender.com';
-
-  // backendUrl when working on development server
-  // const backendUrl = 'http://localhost:5001';
-
   const getYouTubeThumbnail = (url) => {
     const videoId = url.split('v=')[1].split('&')[0];
     return `https://img.youtube.com/vi/${videoId}/0.jpg`;
@@ -29,8 +24,8 @@ function App() {
     setShowAlert(false);
     try {
       setThumbnail(getYouTubeThumbnail(url));
-      console.log('Sending request to backend:', url); // Add this line
-      const response = await fetch(`${backendUrl}/process-video`, {
+      console.log('Sending request to backend:', url);
+      const response = await fetch(`/process-video`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -38,7 +33,7 @@ function App() {
         body: JSON.stringify({ url }),
       });
       const data = await response.json();
-      console.log('Response from backend:', data); // Add this line
+      console.log('Response from backend:', data);
       setStatus(data.message);
 
       const allIngredients = data.ingredients.map((ingredient) => ingredient.replace(/\*\*/g, ''));
@@ -59,7 +54,7 @@ function App() {
       setSummary(data.summary.replace(/\*\*/g, '<strong>').replace(/\*\*/g, '</strong>'));
       setShowAlert(true);
     } catch (error) {
-      console.error('Error in frontend:', error); // Modify this line
+      console.error('Error in frontend:', error);
       setStatus('Error: ' + error.message);
       setShowAlert(true);
     }
