@@ -15,11 +15,8 @@ const port = process.env.PORT || 5001;
 console.log(`Bucket Name: ${process.env.BUCKET_NAME}`);
 
 app.use(bodyParser.json());
-const corsOptions = {
-  origin: 'https://cookmartai.onrender.com',
-  optionsSuccessStatus: 200,
-};
-app.use(cors(corsOptions));
+
+app.use(cors());
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, '../frontend/build')));
