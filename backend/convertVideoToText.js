@@ -1,4 +1,5 @@
 const ytdl = require('ytdl-core');
+const youtubedl = require('youtube-dl-exec');
 const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
 const FormData = require('form-data');
@@ -7,7 +8,7 @@ const path = require('path');
 const fetch = require('node-fetch');
 const { uploadToGCS, downloadFromGCS } = require('./gcsUtils');
 
-ffmpeg.setFfmpegPath(ffmpegPath);
+ffmpeg.setFfmpegPath(require('ffmpeg-static'));
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
@@ -15,10 +16,12 @@ async function downloadAudio(url) {
   const timerLabel = `Download Audio ${Date.now()}`; // Unique timer label
   console.time(timerLabel);
   try {
-    const info = await ytdl.getInfo(url);
-    const videoTitle = info.videoDetails.title;
-    const channelName = info.videoDetails.author.name;
-    const videoViews = info.videoDetails.viewCount;
+    const info = await youtubedl(url, {
+      dumpSingleJson: true,
+    });
+    const videoTitle = info.title;
+    const channelName = info.uploader;
+    const videoViews = info.view_count;
     const uniqueNumber = Date.now();
     const folderName = `${channelName}_${videoTitle}_${uniqueNumber}`.replace(
       /[^a-zA-Z0-9-_]/g,
@@ -28,42 +31,25 @@ async function downloadAudio(url) {
     fs.mkdirSync(outputPath, { recursive: true });
 
     const audioPath = path.join(outputPath, 'audio.mp3');
-    const audioStream = ytdl(url, { filter: 'audioonly' });
 
-    console.log('Audio stream created:', audioStream);
-
-    audioStream.on('error', (err) => {
-      console.error('Error with ytdl-core stream:', err.message);
-      throw err;
+    console.log('Downloading audio...');
+    await youtubedl(url, {
+      extractAudio: true,
+      audioFormat: 'mp3',
+      output: audioPath,
     });
 
-    return new Promise((resolve, reject) => {
-      ffmpeg(audioStream)
-        .audioCodec('libmp3lame')
-        .save(audioPath)
-        .on('start', (commandLine) => {
-          console.log('Spawned ffmpeg with command:', commandLine);
-        })
-        .on('progress', (progress) => {
-          console.log(`Processing: ${progress.percent}% done`);
-        })
-        .on('end', async () => {
-          console.timeEnd(timerLabel);
-          console.log('Audio downloaded and converted to MP3');
-          await uploadToGCS(audioPath, `audio/${folderName}/audio.mp3`);
-          resolve({
-            audioPath: `gs://${process.env.BUCKET_NAME}/audio/${folderName}/audio.mp3`,
-            videoTitle,
-            channelName,
-            videoViews,
-          });
-        })
-        .on('error', (err) => {
-          console.timeEnd(timerLabel);
-          console.error('Error downloading audio:', err.message);
-          reject(err);
-        });
-    });
+    console.log('Audio downloaded and saved as MP3');
+
+    await uploadToGCS(audioPath, `audio/${folderName}/audio.mp3`);
+
+    console.timeEnd(timerLabel);
+    return {
+      audioPath: `gs://${process.env.BUCKET_NAME}/audio/${folderName}/audio.mp3`,
+      videoTitle,
+      channelName,
+      videoViews,
+    };
   } catch (error) {
     console.timeEnd(timerLabel);
     console.error('Error in downloadAudio:', error.message);
@@ -74,6 +60,7 @@ async function downloadAudio(url) {
     }
   }
 }
+
 async function transcribeAudio(gcsUri) {
   console.log('Starting transcribeAudio');
   console.time('Transcribe Audio');
