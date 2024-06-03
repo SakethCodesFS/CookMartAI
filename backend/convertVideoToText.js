@@ -12,6 +12,7 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 async function downloadAudio(url) {
+  console.log('Starting downloadAudio');
   console.time('Download Audio');
   const info = await ytdl.getInfo(url);
   const videoTitle = info.videoDetails.title;
@@ -48,6 +49,7 @@ async function downloadAudio(url) {
 }
 
 async function transcribeAudio(gcsUri) {
+  console.log('Starting transcribeAudio');
   console.time('Transcribe Audio');
   const localPath = path.join(__dirname, 'downloads', 'temp_audio.mp3');
   await downloadFromGCS(gcsUri, localPath);
@@ -66,7 +68,6 @@ async function transcribeAudio(gcsUri) {
     });
     const data = await response.json();
     console.timeEnd('Transcribe Audio');
-    const transcript = data.text;
     console.log('Transcript:', transcript);
     return transcript;
   } catch (error) {
@@ -77,6 +78,7 @@ async function transcribeAudio(gcsUri) {
 }
 
 async function generateIngredientList(transcript) {
+  console.log('Starting generateIngredientList');
   console.time('Generate Ingredients');
   try {
     const prompt = `Extract the list of ingredients from the following recipe transcript and suggest items to order from Instacart or Amazon:\n\n${transcript}\n\nIngredients:`;
@@ -115,6 +117,7 @@ async function generateIngredientList(transcript) {
 }
 
 async function summarizeRecipe(transcript) {
+  console.log('Starting summarizeRecipe');
   console.time('Summarize Recipe');
   try {
     const prompt = `Summarize the following recipe transcript into clear and concise steps:\n\n${transcript}\n\nSummary:`;
@@ -153,6 +156,7 @@ async function summarizeRecipe(transcript) {
 }
 
 async function processVideo(url) {
+  console.log('Starting processVideo');
   console.time('Total Process');
   try {
     const { audioPath, videoTitle, channelName, videoViews } = await downloadAudio(url);
@@ -169,3 +173,39 @@ async function processVideo(url) {
 }
 
 module.exports = { processVideo };
+
+require('dotenv').config();
+console.log('Environment Variables:', process.env);
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const { processVideo } = require('./convertVideoToText');
+
+const app = express();
+const port = process.env.PORT || 5001;
+
+app.use(bodyParser.json());
+app.use(cors());
+
+app.post('/process-video', async (req, res) => {
+  console.log('Received /process-video request');
+  const { url } = req.body;
+  try {
+    const { ingredients, summary, videoTitle, channelName, videoViews } = await processVideo(url);
+    res.send({
+      message: 'Video processed successfully',
+      ingredients,
+      summary,
+      videoTitle,
+      channelName,
+      videoViews,
+    });
+  } catch (error) {
+    console.error('Error processing video:', error.message);
+    res.status(500).send({ message: 'Error processing video', error: error.message });
+  }
+});
+
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
+});

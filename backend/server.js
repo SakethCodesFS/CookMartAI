@@ -12,6 +12,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 app.post('/process-video', async (req, res) => {
+  console.log('Received /process-video request');
   const { url } = req.body;
   try {
     const { ingredients, summary, videoTitle, channelName, videoViews } = await processVideo(url);
@@ -24,6 +25,7 @@ app.post('/process-video', async (req, res) => {
       videoViews,
     });
   } catch (error) {
+    console.error('Error processing video:', error.message);
     res.status(500).send({ message: 'Error processing video', error: error.message });
   }
 });
