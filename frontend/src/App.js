@@ -12,7 +12,7 @@ function App() {
   const [thumbnail, setThumbnail] = useState('');
   const [showAlert, setShowAlert] = useState(false);
 
-  const backendUrl = 'https://cookmartaibackend.onrender.com/';
+  const backendUrl = 'https://cookmartaibackend.onrender.com';
 
   const getYouTubeThumbnail = (url) => {
     const videoId = url.split('v=')[1].split('&')[0];
