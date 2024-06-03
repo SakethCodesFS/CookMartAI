@@ -13,7 +13,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 async function downloadAudio(url) {
   console.log('Starting downloadAudio');
-  console.time('Download Audio');
+  console.time('Download Audio'); // Start timer
   try {
     const info = await ytdl.getInfo(url);
     const videoTitle = info.videoDetails.title;
@@ -48,7 +48,7 @@ async function downloadAudio(url) {
           console.log(`Processing: ${progress.percent}% done`);
         })
         .on('end', async () => {
-          console.timeEnd('Download Audio');
+          console.timeEnd('Download Audio'); // End timer
           console.log('Audio downloaded and converted to MP3');
           await uploadToGCS(audioPath, `audio/${folderName}/audio.mp3`);
           resolve({
@@ -59,11 +59,13 @@ async function downloadAudio(url) {
           });
         })
         .on('error', (err) => {
+          console.timeEnd('Download Audio'); // Ensure the timer ends in case of error
           console.error('Error downloading audio:', err.message);
           reject(err);
         });
     });
   } catch (error) {
+    console.timeEnd('Download Audio'); // Ensure the timer ends in case of error
     console.error('Error in downloadAudio:', error.message);
     throw error;
   }

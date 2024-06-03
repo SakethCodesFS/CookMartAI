@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -46,7 +45,13 @@ app.post('/process-video', async (req, res) => {
     });
   } catch (error) {
     console.error('Error processing video:', error);
-    res.status(500).send({ message: 'Error processing video', error: error.message });
+    if (error.message.includes('Status code: 410')) {
+      res.status(410).send({ message: 'The video is no longer available.' });
+    } else {
+      res
+        .status(500)
+        .send({ message: 'An error occurred while processing the video.', error: error.message });
+    }
   }
 });
 
