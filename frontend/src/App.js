@@ -29,6 +29,7 @@ function App() {
     setShowAlert(false);
     try {
       setThumbnail(getYouTubeThumbnail(url));
+      console.log('Sending request to backend:', url); // Add this line
       const response = await fetch(`${backendUrl}/process-video`, {
         method: 'POST',
         headers: {
@@ -37,6 +38,7 @@ function App() {
         body: JSON.stringify({ url }),
       });
       const data = await response.json();
+      console.log('Response from backend:', data); // Add this line
       setStatus(data.message);
 
       const allIngredients = data.ingredients.map((ingredient) => ingredient.replace(/\*\*/g, ''));
@@ -57,6 +59,7 @@ function App() {
       setSummary(data.summary.replace(/\*\*/g, '<strong>').replace(/\*\*/g, '</strong>'));
       setShowAlert(true);
     } catch (error) {
+      console.error('Error in frontend:', error); // Modify this line
       setStatus('Error: ' + error.message);
       setShowAlert(true);
     }
