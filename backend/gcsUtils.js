@@ -4,9 +4,6 @@ const { Storage } = require('@google-cloud/storage');
 const storage = new Storage();
 const bucketName = process.env.BUCKET_NAME;
 
-// Set the GOOGLE_APPLICATION_CREDENTIALS environment variable to the path to the credentials file
-process.env.GOOGLE_APPLICATION_CREDENTIALS = '/etc/secrets/GOOGLE_APPLICATION_CREDENTIALS';
-
 if (!bucketName) {
   throw new Error('A bucket name is needed to use Cloud Storage.');
 }
