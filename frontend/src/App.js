@@ -14,6 +14,9 @@ function App() {
 
   const backendUrl = 'https://cookmartaibackend.onrender.com';
 
+  // backendUrl when working on development server
+  // const backendUrl = 'http://localhost:5001';
+
   const getYouTubeThumbnail = (url) => {
     const videoId = url.split('v=')[1].split('&')[0];
     return `https://img.youtube.com/vi/${videoId}/0.jpg`;
