@@ -12,8 +12,8 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 async function downloadAudio(url) {
-  console.log('Starting downloadAudio');
-  console.time('Download Audio'); // Start timer
+  const timerLabel = `Download Audio ${Date.now()}`; // Unique timer label
+  console.time(timerLabel);
   try {
     const info = await ytdl.getInfo(url);
     const videoTitle = info.videoDetails.title;
@@ -48,7 +48,7 @@ async function downloadAudio(url) {
           console.log(`Processing: ${progress.percent}% done`);
         })
         .on('end', async () => {
-          console.timeEnd('Download Audio'); // End timer
+          console.timeEnd(timerLabel);
           console.log('Audio downloaded and converted to MP3');
           await uploadToGCS(audioPath, `audio/${folderName}/audio.mp3`);
           resolve({
@@ -59,18 +59,21 @@ async function downloadAudio(url) {
           });
         })
         .on('error', (err) => {
-          console.timeEnd('Download Audio'); // Ensure the timer ends in case of error
+          console.timeEnd(timerLabel);
           console.error('Error downloading audio:', err.message);
           reject(err);
         });
     });
   } catch (error) {
-    console.timeEnd('Download Audio'); // Ensure the timer ends in case of error
+    console.timeEnd(timerLabel);
     console.error('Error in downloadAudio:', error.message);
-    throw error;
+    if (error.message.includes('Status code: 410')) {
+      throw new Error('The video is no longer available.');
+    } else {
+      throw error;
+    }
   }
 }
-
 async function transcribeAudio(gcsUri) {
   console.log('Starting transcribeAudio');
   console.time('Transcribe Audio');

@@ -45,7 +45,7 @@ app.post('/process-video', async (req, res) => {
     });
   } catch (error) {
     console.error('Error processing video:', error);
-    if (error.message.includes('Status code: 410')) {
+    if (error.message.includes('The video is no longer available.')) {
       res.status(410).send({ message: 'The video is no longer available.' });
     } else {
       res
