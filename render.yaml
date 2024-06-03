@@ -1,7 +1,0 @@
-services:
-  - type: static
-    name: frontend
-    env: static
-    staticPublishPath: frontend/build
-    buildCommand: npm install && npm run build
-    rootDir: frontend

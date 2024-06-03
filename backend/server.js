@@ -16,8 +16,12 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-app.use(express.json());
+app.use(bodyParser.json());
 
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, '../frontend/build')));
+
+// API routes
 app.post('/process-video', async (req, res) => {
   console.log('Received /process-video request');
   const { url } = req.body;
@@ -43,6 +47,11 @@ app.post('/process-video', async (req, res) => {
     console.error('Error processing video:', error.message); // Ensure this line is here
     res.status(500).send({ message: 'Error processing video', error: error.message });
   }
+});
+
+// Catch-all handler for any request that doesn't match an API route
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
 });
 
 app.listen(port, () => {
