@@ -26,7 +26,7 @@ function App() {
     try {
       setThumbnail(getYouTubeThumbnail(url));
       console.log('Sending request to backend:', url);
-      const response = await fetch('http://localhost:5001/process-video', {
+      const response = await fetch('/process-video', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
