@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { CSSTransition } from 'react-transition-group';
 import Timer from './Timer';
 
@@ -11,6 +11,7 @@ function App() {
   const [summary, setSummary] = useState('');
   const [thumbnail, setThumbnail] = useState('');
   const [showAlert, setShowAlert] = useState(false);
+  const alertRef = useRef(null);
 
   const getYouTubeThumbnail = (url) => {
     const videoId = url.split('v=')[1].split('&')[0];
@@ -25,7 +26,7 @@ function App() {
     try {
       setThumbnail(getYouTubeThumbnail(url));
       console.log('Sending request to backend:', url);
-      const response = await fetch(`/process-video`, {
+      const response = await fetch('http://localhost:5001/process-video', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -81,12 +82,14 @@ function App() {
     <div className="min-h-screen bg-gradient-to-r from-green-400 to-blue-500 flex flex-col items-center p-6">
       <div className="w-full max-w-6xl">
         <CSSTransition
+          nodeRef={alertRef}
           in={showAlert}
           timeout={300}
           classNames="alert"
           unmountOnExit
         >
           <div
+            ref={alertRef}
             className={`p-4 mb-4 rounded-md text-white ${
               status.startsWith('Error') ? 'bg-red-500' : 'bg-green-500'
             }`}
