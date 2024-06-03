@@ -1,9 +1,7 @@
 const ytdl = require('ytdl-core');
-const youtubedl = require('youtube-dl-exec');
 const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
 const FormData = require('form-data');
-const ffmpegPath = require('ffmpeg-static');
 const path = require('path');
 const fetch = require('node-fetch');
 const { uploadToGCS, downloadFromGCS } = require('./gcsUtils');
