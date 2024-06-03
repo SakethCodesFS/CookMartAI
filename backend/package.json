@@ -19,6 +19,7 @@
     "node-fetch": "^2.6.1",
     "openai": "^4.47.3",
     "path": "^0.12.7",
+    "youtube-dl-exec": "^3.0.2",
     "ytdl-core": "^4.9.1"
   }
 }

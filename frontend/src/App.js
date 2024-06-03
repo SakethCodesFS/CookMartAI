@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CSSTransition } from 'react-transition-group';
-import Timer from './Timer'; // Make sure to import the Timer component
+import Timer from './Timer';
 
 function App() {
   const [url, setUrl] = useState('');
@@ -34,24 +34,30 @@ function App() {
       });
       const data = await response.json();
       console.log('Response from backend:', data);
-      setStatus(data.message);
+      if (response.ok) {
+        setStatus(data.message);
 
-      const allIngredients = data.ingredients.map((ingredient) => ingredient.replace(/\*\*/g, ''));
-      setIngredients(
-        allIngredients.filter(
-          (item) =>
-            !item.includes(
-              'Here are suggestions for items you can order from Instacart or Amazon:',
-            ),
-        ),
-      );
-      setOrderItems(
-        allIngredients.filter((item) =>
-          item.includes('Here are suggestions for items you can order from Instacart or Amazon:'),
-        ),
-      );
+        const allIngredients = data.ingredients.map((ingredient) =>
+          ingredient.replace(/\*\*/g, ''),
+        );
+        setIngredients(
+          allIngredients.filter(
+            (item) =>
+              !item.includes(
+                'Here are suggestions for items you can order from Instacart or Amazon:',
+              ),
+          ),
+        );
+        setOrderItems(
+          allIngredients.filter((item) =>
+            item.includes('Here are suggestions for items you can order from Instacart or Amazon:'),
+          ),
+        );
 
-      setSummary(data.summary.replace(/\*\*/g, '<strong>').replace(/\*\*/g, '</strong>'));
+        setSummary(data.summary.replace(/\*\*/g, '<strong>').replace(/\*\*/g, '</strong>'));
+      } else {
+        setStatus(data.message || 'An error occurred while processing the video.');
+      }
       setShowAlert(true);
     } catch (error) {
       console.error('Error in frontend:', error);
