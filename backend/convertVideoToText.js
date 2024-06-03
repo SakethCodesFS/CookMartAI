@@ -5,6 +5,7 @@ const FormData = require('form-data');
 const path = require('path');
 const fetch = require('node-fetch');
 const { uploadToGCS, downloadFromGCS } = require('./gcsUtils');
+const axios = require('axios'); // Ensure axios is imported
 
 ffmpeg.setFfmpegPath(require('ffmpeg-static'));
 
