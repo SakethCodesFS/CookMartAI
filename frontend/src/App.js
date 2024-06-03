@@ -12,6 +12,8 @@ function App() {
   const [thumbnail, setThumbnail] = useState('');
   const [showAlert, setShowAlert] = useState(false);
 
+  const backendUrl = 'https://cookmartaibackend.onrender.com/';
+
   const getYouTubeThumbnail = (url) => {
     const videoId = url.split('v=')[1].split('&')[0];
     return `https://img.youtube.com/vi/${videoId}/0.jpg`;
@@ -24,7 +26,7 @@ function App() {
     setShowAlert(false);
     try {
       setThumbnail(getYouTubeThumbnail(url));
-      const response = await fetch('http://localhost:5001/process-video', {
+      const response = await fetch(`${backendUrl}/process-video`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
