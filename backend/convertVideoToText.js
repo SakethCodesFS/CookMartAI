@@ -11,28 +11,10 @@ ffmpeg.setFfmpegPath(require('ffmpeg-static'));
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-async function isVideoAvailable(videoUrl) {
-  try {
-    const videoId = ytdl.getURLVideoID(videoUrl);
-    const response = await axios.get(`https://www.youtube.com/get_video_info?video_id=${videoId}`);
-    const videoInfo = new URLSearchParams(response.data);
-    if (videoInfo.get('status') === 'fail') {
-      throw new Error(videoInfo.get('reason') || 'Video not available');
-    }
-    return true;
-  } catch (error) {
-    console.error('Error checking video availability:', error.message);
-    throw new Error('The video is no longer available.');
-  }
-}
-
 async function downloadAudio(url) {
   const timerLabel = `Download Audio ${Date.now()}`; // Unique timer label
   console.time(timerLabel);
   try {
-    console.log('Checking video availability...');
-    await isVideoAvailable(url);
-
     const info = await ytdl.getInfo(url);
     const videoTitle = info.videoDetails.title;
     const channelName = info.videoDetails.author.name;
@@ -85,7 +67,11 @@ async function downloadAudio(url) {
   } catch (error) {
     console.timeEnd(timerLabel);
     console.error('Error in downloadAudio:', error.message);
-    throw error;
+    if (error.message.includes('Video unavailable')) {
+      throw new Error('The video is no longer available.');
+    } else {
+      throw error;
+    }
   }
 }
 
